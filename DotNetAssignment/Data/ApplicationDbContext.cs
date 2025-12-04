@@ -12,6 +12,7 @@ namespace DotNetAssignment.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,6 +30,11 @@ namespace DotNetAssignment.Data
                 new Role { Id = 1, Name = "Admin", Description = "Administrator with full access" },
                 new Role { Id = 2, Name = "User", Description = "Regular user with limited access" }
             );
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithMany()
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

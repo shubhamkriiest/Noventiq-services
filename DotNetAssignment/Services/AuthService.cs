@@ -15,13 +15,15 @@ namespace DotNetAssignment.Services
         private readonly IConfiguration _configuration;
         private readonly SimpleLocalizer _simpleLocalizer;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
 
-        public AuthService(IUserRepository userRepository, IConfiguration configuration, SimpleLocalizer simpleLocalizer, IHttpContextAccessor httpContextAccessor)
+        public AuthService(IUserRepository userRepository, IConfiguration configuration, SimpleLocalizer simpleLocalizer, IHttpContextAccessor httpContextAccessor, IRefreshTokenRepository refreshTokenRepository)
         {
             _userRepository = userRepository;
             _configuration = configuration;
             _simpleLocalizer = simpleLocalizer;
             _httpContextAccessor = httpContextAccessor;
+            _refreshTokenRepository = refreshTokenRepository;
         }
 
         public async Task<(bool Success, string Message, LoginResponseDto? Response)> LoginAsync(LoginDto loginDto)
@@ -51,10 +53,55 @@ namespace DotNetAssignment.Services
                 Username = user.Username,
                 Email = user.Email,
                 Role = user.Role.Name,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes)
+                ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes),
+                RefreshToken = GenerateRefreshToken(out var refreshExpires)
             };
 
+            // Persist refresh token
+            await _refreshTokenRepository.CreateAsync(new RefreshToken
+            {
+                UserId = user.Id,
+                Token = response.RefreshToken,
+                ExpiresAt = refreshExpires
+            });
+
             return (true, _simpleLocalizer.Get("LoginSuccessful", _httpContextAccessor.HttpContext), response);
+        }
+
+        public async Task<(bool Success, string Message, RefreshResponseDto? Response)> RefreshAsync(string refreshToken)
+        {
+            var record = await _refreshTokenRepository.GetByTokenAsync(refreshToken);
+            if (record == null || record.IsRevoked || record.ExpiresAt <= DateTime.UtcNow)
+                return (false, _simpleLocalizer.Get("InvalidCredentials", _httpContextAccessor.HttpContext), null);
+
+            var user = await _userRepository.GetUserWithRoleAsync(record.UserId);
+            if (user == null)
+                return (false, _simpleLocalizer.Get("InvalidCredentials", _httpContextAccessor.HttpContext), null);
+
+            // revoke old
+            record.IsRevoked = true;
+            record.RevokedAt = DateTime.UtcNow;
+            await _refreshTokenRepository.UpdateAsync(record);
+
+            // issue new
+            var token = GenerateJwtToken(user);
+            var expiryMinutes = int.Parse(_configuration["JwtSettings:ExpiryMinutes"]!);
+            var newRefresh = GenerateRefreshToken(out var refreshExpires);
+            await _refreshTokenRepository.CreateAsync(new RefreshToken
+            {
+                UserId = user.Id,
+                Token = newRefresh,
+                ExpiresAt = refreshExpires
+            });
+
+            var resp = new RefreshResponseDto
+            {
+                Token = token,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes),
+                RefreshToken = newRefresh
+            };
+
+            return (true, _simpleLocalizer.Get("LoginSuccessful", _httpContextAccessor.HttpContext), resp);
         }
 
         public async Task<(bool Success, string Message)> RegisterAsync(CreateUserDto registerDto)
@@ -116,6 +163,17 @@ namespace DotNetAssignment.Services
 
             // Return token as string
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private string GenerateRefreshToken(out DateTime refreshExpires)
+        {
+            var bytes = new byte[64];
+            System.Security.Cryptography.RandomNumberGenerator.Fill(bytes);
+            refreshExpires = DateTime.UtcNow.AddDays(7);
+            return Convert.ToBase64String(bytes)
+                .TrimEnd('=')
+                .Replace('+', '-')
+                .Replace('/', '_');
         }
     }
 }

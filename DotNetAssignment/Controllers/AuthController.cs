@@ -26,6 +26,16 @@ namespace DotNetAssignment.Controllers
 
             return Ok(response);
         }
+        
+        // POST: api/auth/refresh
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequestDto request)
+        {
+            var result = await _authService.RefreshAsync(request.RefreshToken);
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
+            return Ok(result.Response);
+        }
 
         // POST: api/auth/register
         [HttpPost("register")]

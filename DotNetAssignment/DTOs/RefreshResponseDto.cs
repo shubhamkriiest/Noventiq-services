@@ -1,11 +1,8 @@
 namespace DotNetAssignment.DTOs
 {
-    public class LoginResponseDto
+    public class RefreshResponseDto
     {
         public string Token { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
         public DateTime ExpiresAt { get; set; }
         public string RefreshToken { get; set; } = string.Empty;
     }
