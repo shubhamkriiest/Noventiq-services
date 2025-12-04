@@ -1,16 +1,22 @@
 using DotNetAssignment.DTOs;
 using DotNetAssignment.Models;
 using DotNetAssignment.Repositories;
+using Microsoft.AspNetCore.Http;
+using DotNetAssignment.Services;
 
 namespace DotNetAssignment.Services
 {
     public class RoleService : IRoleService
     {
         private readonly IRoleRepository _roleRepository;
+        private readonly SimpleLocalizer _simpleLocalizer;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public RoleService(IRoleRepository roleRepository)
+        public RoleService(IRoleRepository roleRepository, SimpleLocalizer simpleLocalizer, IHttpContextAccessor httpContextAccessor)
         {
             _roleRepository = roleRepository;
+            _simpleLocalizer = simpleLocalizer;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<IEnumerable<RoleDto>> GetAllRolesAsync()
@@ -45,7 +51,7 @@ namespace DotNetAssignment.Services
             // Business validation - check if role name already exists
             var existingRole = await _roleRepository.GetByNameAsync(createDto.Name);
             if (existingRole != null)
-                return (false, "Role name already exists", null);
+                return (false, _simpleLocalizer.Get("RoleNameExists", _httpContextAccessor.HttpContext), null);
 
             // Create new role
             var role = new Role
@@ -63,19 +69,19 @@ namespace DotNetAssignment.Services
                 Description = role.Description
             };
 
-            return (true, "Role created successfully", roleDto);
+            return (true, _simpleLocalizer.Get("RoleCreated", _httpContextAccessor.HttpContext), roleDto);
         }
 
         public async Task<(bool Success, string Message)> UpdateRoleAsync(int id, UpdateRoleDto updateDto)
         {
             var role = await _roleRepository.GetByIdAsync(id);
             if (role == null)
-                return (false, "Role not found");
+                return (false, _simpleLocalizer.Get("RoleNotFound", _httpContextAccessor.HttpContext));
 
             // Check if new name conflicts with another role
             var existingRole = await _roleRepository.GetByNameAsync(updateDto.Name);
             if (existingRole != null && existingRole.Id != id)
-                return (false, "Role name already exists");
+                return (false, _simpleLocalizer.Get("RoleNameExists", _httpContextAccessor.HttpContext));
 
             // Update properties
             role.Name = updateDto.Name;
@@ -83,23 +89,23 @@ namespace DotNetAssignment.Services
 
             await _roleRepository.UpdateAsync(role);
 
-            return (true, "Role updated successfully");
+            return (true, _simpleLocalizer.Get("RoleUpdated", _httpContextAccessor.HttpContext));
         }
 
         public async Task<(bool Success, string Message)> DeleteRoleAsync(int id)
         {
             var role = await _roleRepository.GetByIdAsync(id);
             if (role == null)
-                return (false, "Role not found");
+                return (false, _simpleLocalizer.Get("RoleNotFound", _httpContextAccessor.HttpContext));
 
             // Business rule: Can't delete role if users are assigned to it
             var hasUsers = await _roleRepository.HasUsersAsync(id);
             if (hasUsers)
-                return (false, "Cannot delete role - users are assigned to this role");
+                return (false, _simpleLocalizer.Get("RoleHasUsers", _httpContextAccessor.HttpContext));
 
             await _roleRepository.RemoveAsync(role);
 
-            return (true, "Role deleted successfully");
+            return (true, _simpleLocalizer.Get("RoleDeleted", _httpContextAccessor.HttpContext));
         }
     }
 }

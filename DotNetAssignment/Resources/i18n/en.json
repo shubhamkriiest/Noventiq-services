@@ -1,0 +1,18 @@
+{
+  "InvalidCredentials": "Invalid username or password",
+  "LoginSuccessful": "Login successful",
+  "RegistrationSuccessful": "Registration successful",
+  "UsernameExists": "Username already exists",
+  "EmailExists": "Email already exists",
+  "RoleCreated": "Role created successfully",
+  "RoleUpdated": "Role updated successfully",
+  "RoleDeleted": "Role deleted successfully",
+  "RoleNotFound": "Role not found",
+  "RoleNameExists": "Role name already exists",
+  "RoleHasUsers": "Cannot delete role - users are assigned to this role",
+  "UserCreated": "User created successfully",
+  "UserUpdated": "User updated successfully",
+  "UserDeleted": "User deleted successfully",
+  "UserNotFound": "User not found",
+  "InvalidRole": "Invalid role ID"
+}

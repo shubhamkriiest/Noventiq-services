@@ -1,6 +1,7 @@
 using DotNetAssignment.DTOs;
 using DotNetAssignment.Models;
 using DotNetAssignment.Repositories;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -12,11 +13,15 @@ namespace DotNetAssignment.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
+        private readonly SimpleLocalizer _simpleLocalizer;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AuthService(IUserRepository userRepository, IConfiguration configuration)
+        public AuthService(IUserRepository userRepository, IConfiguration configuration, SimpleLocalizer simpleLocalizer, IHttpContextAccessor httpContextAccessor)
         {
             _userRepository = userRepository;
             _configuration = configuration;
+            _simpleLocalizer = simpleLocalizer;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<(bool Success, string Message, LoginResponseDto? Response)> LoginAsync(LoginDto loginDto)
@@ -25,13 +30,13 @@ namespace DotNetAssignment.Services
             var user = await _userRepository.GetByUsernameAsync(loginDto.Username);
             
             if (user == null)
-                return (false, "Invalid username or password", null);
+                return (false, _simpleLocalizer.Get("InvalidCredentials", _httpContextAccessor.HttpContext), null);
 
             // Verify password using BCrypt
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash);
             
             if (!isPasswordValid)
-                return (false, "Invalid username or password", null);
+                return (false, _simpleLocalizer.Get("InvalidCredentials", _httpContextAccessor.HttpContext), null);
 
             // Load role if not loaded
             user = await _userRepository.GetUserWithRoleAsync(user.Id);
@@ -49,7 +54,7 @@ namespace DotNetAssignment.Services
                 ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes)
             };
 
-            return (true, "Login successful", response);
+            return (true, _simpleLocalizer.Get("LoginSuccessful", _httpContextAccessor.HttpContext), response);
         }
 
         public async Task<(bool Success, string Message)> RegisterAsync(CreateUserDto registerDto)
@@ -57,12 +62,12 @@ namespace DotNetAssignment.Services
             // Check if username exists
             var existingUser = await _userRepository.GetByUsernameAsync(registerDto.Username);
             if (existingUser != null)
-                return (false, "Username already exists");
+                return (false, _simpleLocalizer.Get("UsernameExists", _httpContextAccessor.HttpContext));
 
             // Check if email exists
             var existingEmail = await _userRepository.GetByEmailAsync(registerDto.Email);
             if (existingEmail != null)
-                return (false, "Email already exists");
+                return (false, _simpleLocalizer.Get("EmailExists", _httpContextAccessor.HttpContext));
 
             // Create new user with hashed password
             var user = new User
@@ -75,7 +80,7 @@ namespace DotNetAssignment.Services
 
             await _userRepository.CreateAsync(user);
 
-            return (true, "Registration successful");
+            return (true, _simpleLocalizer.Get("RegistrationSuccessful", _httpContextAccessor.HttpContext));
         }
 
         private string GenerateJwtToken(User user)

@@ -7,7 +7,7 @@ namespace DotNetAssignment.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]  // Requires authentication for all endpoints
+    [Authorize(Roles = "Admin")]  // Requires authentication for all endpoints
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
