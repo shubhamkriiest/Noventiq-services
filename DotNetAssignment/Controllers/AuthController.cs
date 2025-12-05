@@ -9,10 +9,12 @@ namespace DotNetAssignment.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly SimpleLocalizer _localizer;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, SimpleLocalizer localizer)
         {
             _authService = authService;
+            _localizer = localizer;
         }
 
         // POST: api/auth/login
@@ -22,7 +24,7 @@ namespace DotNetAssignment.Controllers
             var (success, message, response) = await _authService.LoginAsync(loginDto);
 
             if (!success)
-                return Unauthorized(new { message });
+                return Unauthorized(new { message = _localizer.Get(message ?? "InvalidCredentials", HttpContext) });
 
             return Ok(response);
         }
@@ -33,7 +35,7 @@ namespace DotNetAssignment.Controllers
         {
             var result = await _authService.RefreshAsync(request.RefreshToken);
             if (!result.Success)
-                return BadRequest(new { message = result.Message });
+                return BadRequest(new { message = _localizer.Get(result.Message ?? "RefreshFailed", HttpContext) });
             return Ok(result.Response);
         }
 
@@ -44,9 +46,9 @@ namespace DotNetAssignment.Controllers
             var (success, message) = await _authService.RegisterAsync(registerDto);
 
             if (!success)
-                return BadRequest(new { message });
+                return BadRequest(new { message = _localizer.Get(message ?? "RegisterFailed", HttpContext) });
 
-            return Ok(new { message });
+            return Ok(new { message = _localizer.Get(message ?? "RegistrationSuccessful", HttpContext) });
         }
     }
 }

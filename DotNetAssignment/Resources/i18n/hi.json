@@ -1,9 +1,12 @@
 {
   "InvalidCredentials": "अमान्य उपयोगकर्ता नाम या पासवर्ड",
   "LoginSuccessful": "लॉगिन सफल",
+  "LoginFailed": "अमान्य प्रमाण-पत्र",
   "RegistrationSuccessful": "पंजीकरण सफल",
+  "RegisterFailed": "पंजीकरण असफल",
   "UsernameExists": "उपयोगकर्ता नाम पहले से मौजूद है",
   "EmailExists": "ईमेल पहले से मौजूद है",
+  "RefreshFailed": "टोकन रिफ्रेश असफल",
   "RoleCreated": "भूमिका सफलतापूर्वक बनाई गई",
   "RoleUpdated": "भूमिका सफलतापूर्वक अपडेट की गई",
   "RoleDeleted": "भूमिका सफलतापूर्वक हटाई गई",

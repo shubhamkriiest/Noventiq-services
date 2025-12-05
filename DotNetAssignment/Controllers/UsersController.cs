@@ -11,10 +11,12 @@ namespace DotNetAssignment.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly SimpleLocalizer _localizer;
 
-        public UsersController(IUserService userService)
+        public UsersController(IUserService userService, SimpleLocalizer localizer)
         {
             _userService = userService;
+            _localizer = localizer;
         }
 
         // GET: api/users
@@ -32,7 +34,7 @@ namespace DotNetAssignment.Controllers
             var user = await _userService.GetUserByIdAsync(id);
             
             if (user == null)
-                return NotFound(new { message = "User not found" });
+                return NotFound(new { message = _localizer.Get("UserNotFound", HttpContext) });
 
             return Ok(user);
         }
@@ -59,7 +61,7 @@ namespace DotNetAssignment.Controllers
             {
                 // Check if it's a "not found" or validation error
                 if (message == "User not found")
-                    return NotFound(new { message });
+                    return NotFound(new { message = _localizer.Get("UserNotFound", HttpContext) });
                 
                 return BadRequest(new { message });
             }

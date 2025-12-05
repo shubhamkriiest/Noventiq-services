@@ -4,6 +4,7 @@ using DotNetAssignment.Controllers;
 using DotNetAssignment.DTOs;
 using DotNetAssignment.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
 using Moq;
 using Xunit;
 
@@ -18,7 +19,10 @@ namespace DotNetAssignment.Tests.Controllers
             service.Setup(s => s.GetAllRolesAsync())
                    .ReturnsAsync(new List<RoleDto> { new RoleDto { Id = 1, Name = "User" } });
 
-            var controller = new RolesController(service.Object);
+            var env = new Mock<IWebHostEnvironment>();
+            env.SetupGet(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+            var localizer = new SimpleLocalizer(env.Object);
+            var controller = new RolesController(service.Object, localizer);
             var result = await controller.GetAllRoles();
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);
@@ -33,7 +37,10 @@ namespace DotNetAssignment.Tests.Controllers
             service.Setup(s => s.GetRoleByIdAsync(1))
                    .ReturnsAsync(new RoleDto { Id = 1, Name = "User" });
 
-            var controller = new RolesController(service.Object);
+            var env = new Mock<IWebHostEnvironment>();
+            env.SetupGet(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+            var localizer = new SimpleLocalizer(env.Object);
+            var controller = new RolesController(service.Object, localizer);
             var result = await controller.GetRole(1);
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);
@@ -48,7 +55,10 @@ namespace DotNetAssignment.Tests.Controllers
             service.Setup(s => s.GetRoleByIdAsync(2))
                    .ReturnsAsync((RoleDto?)null);
 
-            var controller = new RolesController(service.Object);
+            var env = new Mock<IWebHostEnvironment>();
+            env.SetupGet(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+            var localizer = new SimpleLocalizer(env.Object);
+            var controller = new RolesController(service.Object, localizer);
             var result = await controller.GetRole(2);
 
             var notFound = Assert.IsType<NotFoundObjectResult>(result.Result);
@@ -65,7 +75,10 @@ namespace DotNetAssignment.Tests.Controllers
             service.Setup(s => s.CreateRoleAsync(It.IsAny<CreateRoleDto>()))
                    .ReturnsAsync((true, "RoleCreated", new RoleDto { Id = 2, Name = "Admin" }));
 
-            var controller = new RolesController(service.Object);
+            var env = new Mock<IWebHostEnvironment>();
+            env.SetupGet(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+            var localizer = new SimpleLocalizer(env.Object);
+            var controller = new RolesController(service.Object, localizer);
             var result = await controller.CreateRole(new CreateRoleDto { Name = "Admin" });
 
             var created = Assert.IsType<CreatedAtActionResult>(result.Result);
@@ -80,7 +93,10 @@ namespace DotNetAssignment.Tests.Controllers
              service.Setup(s => s.UpdateRoleAsync(99, It.IsAny<UpdateRoleDto>()))
                  .ReturnsAsync((false, "Role not found"));
 
-            var controller = new RolesController(service.Object);
+            var env = new Mock<IWebHostEnvironment>();
+            env.SetupGet(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+            var localizer = new SimpleLocalizer(env.Object);
+            var controller = new RolesController(service.Object, localizer);
             var result = await controller.UpdateRole(99, new UpdateRoleDto { Name = "Ghost" });
 
              var notFound = Assert.IsType<NotFoundObjectResult>(result);
@@ -97,7 +113,10 @@ namespace DotNetAssignment.Tests.Controllers
             service.Setup(s => s.DeleteRoleAsync(1))
                    .ReturnsAsync((false, "RoleHasUsers"));
 
-            var controller = new RolesController(service.Object);
+            var env = new Mock<IWebHostEnvironment>();
+            env.SetupGet(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+            var localizer = new SimpleLocalizer(env.Object);
+            var controller = new RolesController(service.Object, localizer);
             var result = await controller.DeleteRole(1);
 
             var bad = Assert.IsType<BadRequestObjectResult>(result);
@@ -114,7 +133,10 @@ namespace DotNetAssignment.Tests.Controllers
             service.Setup(s => s.DeleteRoleAsync(2))
                    .ReturnsAsync((true, "RoleDeleted"));
 
-            var controller = new RolesController(service.Object);
+            var env = new Mock<IWebHostEnvironment>();
+            env.SetupGet(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+            var localizer = new SimpleLocalizer(env.Object);
+            var controller = new RolesController(service.Object, localizer);
             var result = await controller.DeleteRole(2);
 
             var ok = Assert.IsType<OkObjectResult>(result);

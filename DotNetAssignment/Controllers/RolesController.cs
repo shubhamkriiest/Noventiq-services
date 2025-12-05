@@ -11,10 +11,12 @@ namespace DotNetAssignment.Controllers
     public class RolesController : ControllerBase
     {
         private readonly IRoleService _roleService;
+        private readonly SimpleLocalizer _localizer;
 
-        public RolesController(IRoleService roleService)
+        public RolesController(IRoleService roleService, SimpleLocalizer localizer)
         {
             _roleService = roleService;
+            _localizer = localizer;
         }
 
         // GET: api/roles
@@ -32,7 +34,7 @@ namespace DotNetAssignment.Controllers
             var role = await _roleService.GetRoleByIdAsync(id);
 
             if (role == null)
-                return NotFound(new { message = "Role not found" });
+                return NotFound(new { message = _localizer.Get("RoleNotFound", HttpContext) });
 
             return Ok(role);
         }
@@ -58,7 +60,7 @@ namespace DotNetAssignment.Controllers
             if (!success)
             {
                 if (message == "Role not found")
-                    return NotFound(new { message });
+                    return NotFound(new { message = _localizer.Get("RoleNotFound", HttpContext) });
 
                 return BadRequest(new { message });
             }
@@ -75,7 +77,7 @@ namespace DotNetAssignment.Controllers
             if (!success)
             {
                 if (message == "Role not found")
-                    return NotFound(new { message });
+                    return NotFound(new { message = _localizer.Get("RoleNotFound", HttpContext) });
 
                 return BadRequest(new { message });
             }

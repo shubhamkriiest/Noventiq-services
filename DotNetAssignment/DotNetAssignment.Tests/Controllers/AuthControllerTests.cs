@@ -3,6 +3,7 @@ using DotNetAssignment.Controllers;
 using DotNetAssignment.DTOs;
 using DotNetAssignment.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
 using Moq;
 using Xunit;
 
@@ -27,7 +28,10 @@ namespace DotNetAssignment.Tests.Controllers
             authService.Setup(s => s.LoginAsync(It.IsAny<LoginDto>()))
                        .ReturnsAsync((true, string.Empty, expected));
 
-            var controller = new AuthController(authService.Object);
+               var env = new Mock<IWebHostEnvironment>();
+               env.SetupGet(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+               var localizer = new SimpleLocalizer(env.Object);
+               var controller = new AuthController(authService.Object, localizer);
 
             var result = await controller.Login(loginDto);
 
@@ -45,14 +49,17 @@ namespace DotNetAssignment.Tests.Controllers
             authService.Setup(s => s.LoginAsync(It.IsAny<LoginDto>()))
                        .ReturnsAsync((false, "InvalidCredentials", (LoginResponseDto?)null));
 
-            var controller = new AuthController(authService.Object);
+               var env = new Mock<IWebHostEnvironment>();
+               env.SetupGet(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+               var localizer = new SimpleLocalizer(env.Object);
+               var controller = new AuthController(authService.Object, localizer);
 
             var result = await controller.Login(loginDto);
 
             var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result.Result);
             var messageProp = unauthorized.Value!.GetType().GetProperty("message");
             var message = messageProp!.GetValue(unauthorized.Value) as string;
-            Assert.Equal("InvalidCredentials", message);
+            Assert.Equal("Invalid username or password", message);
         }
 
         [Fact]
@@ -65,7 +72,10 @@ namespace DotNetAssignment.Tests.Controllers
             authService.Setup(s => s.RefreshAsync(It.IsAny<string>()))
                        .ReturnsAsync((true, string.Empty, expected));
 
-            var controller = new AuthController(authService.Object);
+               var env = new Mock<IWebHostEnvironment>();
+               env.SetupGet(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+               var localizer = new SimpleLocalizer(env.Object);
+               var controller = new AuthController(authService.Object, localizer);
 
             var result = await controller.Refresh(request);
 
@@ -83,7 +93,10 @@ namespace DotNetAssignment.Tests.Controllers
             authService.Setup(s => s.RefreshAsync(It.IsAny<string>()))
                        .ReturnsAsync((false, "InvalidOrExpiredRefreshToken", (RefreshResponseDto?)null));
 
-            var controller = new AuthController(authService.Object);
+               var env = new Mock<IWebHostEnvironment>();
+               env.SetupGet(e => e.ContentRootPath).Returns(Directory.GetCurrentDirectory());
+               var localizer = new SimpleLocalizer(env.Object);
+               var controller = new AuthController(authService.Object, localizer);
 
             var result = await controller.Refresh(request);
 

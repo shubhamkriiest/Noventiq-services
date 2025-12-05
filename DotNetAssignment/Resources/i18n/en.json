@@ -1,9 +1,12 @@
 {
   "InvalidCredentials": "Invalid username or password",
   "LoginSuccessful": "Login successful",
+  "LoginFailed": "Invalid credentials",
   "RegistrationSuccessful": "Registration successful",
+  "RegisterFailed": "Registration failed",
   "UsernameExists": "Username already exists",
   "EmailExists": "Email already exists",
+  "RefreshFailed": "Token refresh failed",
   "RoleCreated": "Role created successfully",
   "RoleUpdated": "Role updated successfully",
   "RoleDeleted": "Role deleted successfully",
